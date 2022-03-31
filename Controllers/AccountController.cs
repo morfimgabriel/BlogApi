@@ -24,7 +24,8 @@ namespace Blog.Controllers
 
         [AllowAnonymous]
         [HttpPost("v1/accounts/login")]
-        public async Task<IActionResult> Login([FromBody] LoginViewModel model, [FromServices] BlogDataContext context)
+        public async Task<IActionResult> Login([FromBody] LoginViewModel model,
+            [FromServices] BlogDataContext context)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ResultViewModel<string>(ModelState.GetErrors()));
@@ -55,7 +56,9 @@ namespace Blog.Controllers
         }
 
         [HttpPost("v1/accounts/")]
-        public async Task<IActionResult> Post([FromBody] RegisterViewModel model, [FromServices] BlogDataContext context)
+        public async Task<IActionResult> Post([FromBody] RegisterViewModel model,
+            [FromServices] BlogDataContext context,
+            [FromServices] EmailService emailService)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new ResultViewModel<string>(ModelState.GetErrors()));
@@ -74,6 +77,13 @@ namespace Blog.Controllers
             {
                 await context.Users.AddAsync(user);
                 await context.SaveChangesAsync();
+
+                // procurar smtp válido n funciona pois n tenho
+                emailService.Send(
+                    user.Name,
+                    user.Email,
+                    subject: "Bem vindo",
+                    body: $"sua senha é <strong>{password}</strong>");
 
                 return Ok(new ResultViewModel<dynamic>(new
                 {
