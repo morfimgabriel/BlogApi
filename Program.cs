@@ -2,8 +2,11 @@ using Blog;
 using Blog.Data;
 using Blog.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
+using System.IO.Compression;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 ConfigureAuthentication(builder);
@@ -15,6 +18,11 @@ LoadConfiguration(app);
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Para Utilizar o compression necessário a App reconhecer
+app.UseResponseCompression();
+
+// Utilizado para poder fazer upload de arquivos dentro do projeto
 app.UseStaticFiles();
 
 app.MapControllers();
@@ -29,6 +37,7 @@ void LoadConfiguration(WebApplication app)
     app.Configuration.GetValue<string>("ApiKey");
 
     var smtp = new Configuration.SmtpConfiguration();
+    // bind popula o objeto smtp com os atributos do app.settings.json em caso de tiverem o mesmo nome de atributos
     app.Configuration.GetSection("Smtp").Bind(smtp);
     Configuration.Smtp = smtp;
 }
@@ -57,12 +66,31 @@ void ConfigureAuthentication(WebApplicationBuilder builder)
 
 void ConfigureMvc(WebApplicationBuilder builder)
 {
+    builder.Services.AddMemoryCache();
+
+    // Utilizando Compression para a response voltar muito mais leve(zipada), o front entende e descompacta para utilizacao
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.Providers.Add<GzipCompressionProvider>();
+    });
+
+    builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+    {
+        options.Level = CompressionLevel.Optimal;
+    });
+
     builder
     .Services
     .AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
         options.SuppressModelStateInvalidFilter = true;
+    })
+    .AddJsonOptions(x =>
+    {
+        //Adicionado para ele não se perder na serialização de objetos que possuem a mesma relação ex: Post e Category
+        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
     });
 }
 
