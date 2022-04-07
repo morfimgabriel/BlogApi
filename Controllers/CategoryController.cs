@@ -47,7 +47,7 @@ namespace Blog.Controllers
                 return Ok(new ResultViewModel<Category>(category));
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new ResultViewModel<List<Category>>("05X13 - Falha interna no Servidor"));
             }
@@ -109,12 +109,12 @@ namespace Blog.Controllers
                 return Ok(new ResultViewModel<Category>(category));
             }
 
-            catch (DbUpdateException ex)
+            catch (DbUpdateException)
             {
                 return StatusCode(500, new ResultViewModel<Category>("05XE12 - Não foi possível alterar a categoria"));
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new ResultViewModel<Category>("05XE13 - Falha interna no Servidor"));
             }
@@ -137,12 +137,12 @@ namespace Blog.Controllers
 
                 return Ok(new ResultViewModel<Category>(category));
             }
-             catch (DbUpdateException ex)
+             catch (DbUpdateException)
             {
                 return StatusCode(500, new ResultViewModel<Category>("05XE10 - Não foi possível deletar a categoria"));
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new ResultViewModel<Category>("05X11 - Falha interna no Servidor"));
             }
