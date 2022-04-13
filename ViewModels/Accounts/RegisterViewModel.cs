@@ -11,5 +11,7 @@ namespace Blog.ViewModels.Accounts
         [EmailAddress(ErrorMessage = "O E-mail é inválido")]
         public string Email { get; set; }
 
+        public int IdRole { get; set; }
+
     }
 }

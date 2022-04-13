@@ -20,6 +20,9 @@ namespace Blog.Controllers
         {
             try
             {
+
+                var a = User.Identity.Name;
+                
                 var categories = await cache.GetOrCreate("CategoriesCache", async entry =>
                 {
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1);

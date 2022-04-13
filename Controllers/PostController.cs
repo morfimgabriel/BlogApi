@@ -43,17 +43,17 @@ namespace Blog.Controllers
                     pageSize,
                     posts
                 }));
-            } 
+            }
             catch
             {
                 return StatusCode(500, new ResultViewModel<string>("05X04 - Falha interna no servidor"));
             }
-            
+
         }
 
         [HttpGet("v1/posts/{id:int}")]
         public async Task<IActionResult> GetByIdAsync([FromServices] BlogDataContext context,
-            [FromRoute] int id )
+            [FromRoute] int id)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace Blog.Controllers
                     context.Posts
                       .AsNoTracking()
                      .Include(x => x.Author)
-                     .ThenInclude(x => x.Roles)
+                     .ThenInclude(x => x.UserRoles)
                      .Include(x => x.Category)
                      .FirstOrDefaultAsync(x => x.Id == id);
 

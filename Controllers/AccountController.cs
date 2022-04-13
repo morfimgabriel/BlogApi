@@ -35,8 +35,16 @@ namespace Blog.Controllers
             var user = await context
                 .Users
                 .AsNoTracking()
-                .Include(x => x.Roles)
+                .Include(x => x.UserRoles)
                 .FirstOrDefaultAsync(x => x.Email == model.Email);
+
+            // um dos jeitos de inserir uma Role
+            //var role = await context.Roles.FirstOrDefaultAsync(x => x.Id == 1);
+            //user.Roles.Add(role);
+            //context.Users.Update(user);
+            //await context.SaveChangesAsync();
+
+
 
             if (user == null)
                 return StatusCode(401, new ResultViewModel<string>("Usuário ou senha inválida"));
@@ -49,7 +57,8 @@ namespace Blog.Controllers
                 var token = _tokenService.GenerateToken(user);
                 return Ok(new ResultViewModel<string>(token, null));
 
-            } catch
+            }
+            catch
             {
                 return StatusCode(500, new ResultViewModel<string>("05X04 - Falha interna no servidor"));
             }
@@ -65,34 +74,56 @@ namespace Blog.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(new ResultViewModel<string>(ModelState.GetErrors()));
 
-            var user = new User
+
+            var user = await context
+                .Users
+                .AsNoTracking()
+                .Include(x => x.UserRoles)
+                .FirstOrDefaultAsync(x => x.Email == model.Email);
+
+            var userRole = new UserRole
             {
-                Name = model.Name,
-                Email = model.Email,
-                Slug = model.Email.Replace("@", "-").Replace(".", "-")
+                User = new User
+                {
+                    Name = model.Name,
+                    Email = model.Email,
+                    Slug = model.Email.Replace("@", "-").Replace(".", "-"),
+                },
+
+                RoleId = model.IdRole            
             };
 
+
+            // Rota do Update 
+            //var userRole = user.UserRoles.First();
+            //userRole.RoleId = 2;
+
+            //await context.UserRoles.Update(userRole)
+
+
+
+
             var password = PasswordGenerator.Generate(25);
-            user.PasswordHash = PasswordHasher.Hash(password);
+            userRole.User.PasswordHash = PasswordHasher.Hash(password);
 
             try
             {
-                await context.Users.AddAsync(user);
+                await context.UserRoles.AddAsync(userRole);
                 await context.SaveChangesAsync();
 
                 // procurar smtp válido n funciona pois n tenho
-                emailService.Send(
-                    user.Name,
-                    user.Email,
-                    subject: "Bem vindo",
-                    body: $"sua senha é <strong>{password}</strong>");
+                //emailService.Send(
+                //    user.Name,
+                //    user.Email,
+                //    subject: "Bem vindo",
+                //    body: $"sua senha é <strong>{password}</strong>");
 
                 return Ok(new ResultViewModel<dynamic>(new
                 {
-                    user = user.Email, password
+                    password
                 }));
-            } 
-            catch (DbUpdateException )
+            }
+            catch (DbUpdateException)
 
             {
                 return StatusCode(400, new ResultViewModel<string>("05X99 - Este E-mail ja está cadastrado"));
@@ -117,9 +148,9 @@ namespace Blog.Controllers
 
             try
             {
-                await  System.IO.File.WriteAllBytesAsync($"wwwroot/images/{fileName}", bytes);
+                await System.IO.File.WriteAllBytesAsync($"wwwroot/images/{fileName}", bytes);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusCode(500, new ResultViewModel<string>("05x04 - Falha Interna no servidor"));
             }
@@ -135,7 +166,7 @@ namespace Blog.Controllers
             {
                 context.Users.Update(user);
                 await context.SaveChangesAsync();
-            } 
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new ResultViewModel<string>("05x04 - Falha Interna no servidor"));

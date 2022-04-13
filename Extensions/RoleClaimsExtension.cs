@@ -13,7 +13,7 @@ namespace Blog.Extensions
                 new(ClaimTypes.Name, user.Email) // User.Identity.Email
             };
 
-            result.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role.Slug)));
+            result.AddRange(user.UserRoles.Select(userRole => new Claim(ClaimTypes.Role, userRole.Role.Slug)));
 
             return result;
         }
